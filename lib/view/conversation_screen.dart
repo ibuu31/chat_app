@@ -1,11 +1,15 @@
+import 'dart:developer';
+
 import 'package:chat_app/helper/constant.dart';
 import 'package:chat_app/services/database.dart';
 import 'package:chat_app/widgets/widget.dart';
 import 'package:flutter/material.dart';
 
 class ConversationScreen extends StatefulWidget {
-  const ConversationScreen({Key? key, this.chatRoomId}) : super(key: key);
+  const ConversationScreen({Key? key, this.chatRoomId, this.userName})
+      : super(key: key);
   final String? chatRoomId;
+  final String? userName;
 
   @override
   State<ConversationScreen> createState() => _ConversationScreenState();
@@ -14,21 +18,21 @@ class ConversationScreen extends StatefulWidget {
 class _ConversationScreenState extends State<ConversationScreen> {
   DatabaseMethods databaseMethods = DatabaseMethods();
   TextEditingController messageController = TextEditingController();
-  late Stream chatMessageStream;
+  Stream? chatMessageStream;
   sendMessage() {
     Map<String, dynamic> messageMap = {
       'message': messageController.text,
-      'sendBy': Constant.myName,
+      'sendBy': StringConstant.myName,
       'time': DateTime.now().millisecondsSinceEpoch
     };
     if (messageController.text.isNotEmpty) {
-      print(widget.chatRoomId);
+      log(widget.chatRoomId.toString());
       databaseMethods.addConversationMessages(widget.chatRoomId, messageMap);
     }
     messageController.clear();
   }
 
-  Widget MessageTile(String message, bool isSendByMe) {
+  Widget messageTile(String message, bool isSendByMe) {
     return Container(
       alignment: isSendByMe ? Alignment.centerRight : Alignment.centerLeft,
       padding: EdgeInsets.only(
@@ -37,24 +41,30 @@ class _ConversationScreenState extends State<ConversationScreen> {
           left: isSendByMe ? 0 : 24,
           right: isSendByMe ? 24 : 0),
       child: Container(
-        margin:
-            isSendByMe ? EdgeInsets.only(left: 30) : EdgeInsets.only(right: 30),
-        padding: EdgeInsets.only(top: 17, bottom: 17, left: 20, right: 20),
+        margin: isSendByMe
+            ? const EdgeInsets.only(left: 30)
+            : const EdgeInsets.only(right: 30),
+        padding:
+            const EdgeInsets.only(top: 17, bottom: 17, left: 20, right: 20),
         decoration: BoxDecoration(
-            borderRadius: isSendByMe
-                ? BorderRadius.only(
-                    topLeft: Radius.circular(23),
-                    topRight: Radius.circular(23),
-                    bottomLeft: Radius.circular(23))
-                : BorderRadius.only(
-                    topLeft: Radius.circular(23),
-                    topRight: Radius.circular(23),
-                    bottomRight: Radius.circular(23)),
-            gradient: LinearGradient(
-              colors: isSendByMe
-                  ? [const Color(0xff007EF4), const Color(0xff2A75BC)]
-                  : [const Color(0x1AFFFFFF), const Color(0x1AFFFFFF)],
-            )),
+          borderRadius: isSendByMe
+              ? const BorderRadius.only(
+                  topLeft: Radius.circular(23),
+                  topRight: Radius.circular(23),
+                  bottomLeft: Radius.circular(23))
+              : const BorderRadius.only(
+                  topLeft: Radius.circular(23),
+                  topRight: Radius.circular(23),
+                  bottomRight: Radius.circular(23)),
+          color: isSendByMe
+              ? Theme.of(context).primaryColor
+              : Colors.grey.shade600,
+          // gradient: LinearGradient(
+          //   colors: isSendByMe
+          //       ? [const Color(0xff007EF4), const Color(0xff2A75BC)]
+          //       : [const Color(0x1AFFFFFF), const Color(0x1AFFFFFF)],
+          // ),
+        ),
         child: Text(
           message,
           style: simpleTextFieldStyle(),
@@ -63,7 +73,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
-  Widget ChatMessageList() {
+  Widget chatMessageList() {
     return StreamBuilder(
         stream: chatMessageStream,
         builder: (context, snapshot) {
@@ -71,19 +81,20 @@ class _ConversationScreenState extends State<ConversationScreen> {
               ? ListView.builder(
                   itemCount: snapshot.data.docs.length,
                   itemBuilder: (context, index) {
-                    return MessageTile(
+                    return messageTile(
                         snapshot.data.docs[index].data()['message'],
                         snapshot.data.docs[index].data()['sendBy'] ==
-                            Constant.myName);
+                            StringConstant.myName);
                   },
                 )
-              : Container();
+              : const Center(child: CircularProgressIndicator());
         });
   }
 
   @override
   void initState() {
     super.initState();
+
     databaseMethods.getConversationMessages(widget.chatRoomId).then((value) {
       setState(() {
         chatMessageStream = value;
@@ -94,41 +105,67 @@ class _ConversationScreenState extends State<ConversationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBarMain(context),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Container(
+              height: 40,
+              width: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  borderRadius: BorderRadius.circular(40)),
+              child: Image.network(
+                  'https://e7.pngegg.com/pngimages/753/432/png-clipart-user-profile-2018-in-sight-user-conference-expo-business-default-business-angle-service-thumbnail.png'),
+            ),
+            const SizedBox(
+              width: 10,
+            ),
+            Text(
+              widget.userName ?? '',
+              style: simpleTextFieldStyle(),
+            ),
+          ],
+        ),
+      ),
       body: Container(
         child: Stack(
           children: [
-            ChatMessageList(),
+            Column(
+              children: [
+                Expanded(child: chatMessageList()),
+                const SizedBox(
+                  height: 90,
+                ),
+              ],
+            ),
             Container(
               alignment: Alignment.bottomCenter,
               child: Container(
-                color: Color(0x54FFFFFF),
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                color: Theme.of(context).primaryColor.withOpacity(0.3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: Row(
                   children: [
                     Expanded(
                         child: TextField(
+                      style: simpleTextFieldStyle(),
                       controller: messageController,
-                      decoration: textFieldInputDecoration('Message...'),
+                      decoration: textFieldInputDecoration('Message...',
+                          isUnderLineBorder: true),
                     )),
-                    GestureDetector(
-                      onTap: () {
-                        sendMessage();
-                      },
-                      child: Container(
-                        padding: EdgeInsets.all(12),
-                        height: 40,
-                        width: 40,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(40),
-                            gradient: LinearGradient(colors: [
-                              Color(0x36FFFFFF),
-                              Color(0x0FFFFFFF),
-                            ])),
-                        child: Image.asset(
-                          'assets/images/send.png',
-                        ),
-                      ),
+                    Container(
+                      decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor,
+                          borderRadius: BorderRadius.circular(30)),
+                      child: IconButton(
+                          onPressed: () {
+                            sendMessage();
+                          },
+                          color: Colors.white,
+                          icon: const Icon(
+                            Icons.send,
+                          )),
                     )
                   ],
                 ),

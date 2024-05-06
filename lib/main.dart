@@ -2,34 +2,13 @@ import 'package:chat_app/firebase_options.dart';
 import 'package:chat_app/helper/authenticate.dart';
 import 'package:chat_app/helper/helper_function.dart';
 import 'package:chat_app/view/chat_room_screen.dart';
-import 'package:chat_app/view/search.dart';
-import 'package:chat_app/view/sigin_screen.dart';
-import 'package:chat_app/view/signup_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-/// todo colors constants
-/// todo make primary color light
-/// todo search icon on appbar
-/// todo new chat floating button
-/// todo chat room screen ui change
-/// todo space on bottom of conversation screen
-/// todo name of the other person on conversation screen
-/// todo send message on tapping enter
-/// todo on tapping keyboard the screen should float up
-/// todo outline border on login textfields
-/// todo change gesture detector to button
-/// todo remove google login button
-/// todo make login button rectangle
-/// todo remove forget password button or add feature of it.
-/// todo
-/// todo
-/// todo
-/// todo
-/// todo
+/// todo create multiple chats
+/// todo upload on github
 
 void main() async {
-  // the below line is important before initializing the firebase.
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -52,8 +31,6 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         isUserLoggedIn = value ?? false;
       });
-
-      print(isUserLoggedIn);
     });
   }
 
@@ -67,14 +44,29 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
-          primaryColor: Color(0xff145C9E),
-          scaffoldBackgroundColor: Color(0xff1F1F1F)),
+          primarySwatch: MaterialColor(
+        Colors.blue.shade800.value,
+        <int, Color>{
+          50: Color(Colors.blue.shade800.value), //10%
+          100: Color(Colors.blue.shade800.value), //20%
+          200: Color(Colors.blue.shade800.value), //30%
+          // 300: const Color(0xff89392b), //40%
+          // 400: const Color(0xff733024), //50%
+          500: Color(Colors.blue.shade800.value), //60%
+          600: Color(Colors.blue.shade800.value), //70%
+          700: Color(Colors.blue.shade800.value), //80%
+          // 800: const Color(0xff170907), //90%
+          // 900: const Color(0xff000000), //100%
+        },
+      )
+          // colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade800),
+          ),
       debugShowCheckedModeBanner: false,
       home: isUserLoggedIn == null
           ? const CircularProgressIndicator()
           : isUserLoggedIn == true
-              ? ChatRoomScreen()
-              : Authenticate(),
+              ? const ChatRoomScreen()
+              : const Authenticate(),
     );
   }
 }

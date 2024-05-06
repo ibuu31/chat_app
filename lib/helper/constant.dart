@@ -1,3 +1,5 @@
-class Constant {
+class StringConstant {
   static String myName = '';
 }
+
+class ColorConstant {}

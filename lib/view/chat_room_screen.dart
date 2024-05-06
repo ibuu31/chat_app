@@ -1,6 +1,5 @@
 import 'package:chat_app/helper/constant.dart';
 import 'package:chat_app/helper/helper_function.dart';
-import 'package:chat_app/services/auth.dart';
 import 'package:chat_app/services/database.dart';
 import 'package:chat_app/view/conversation_screen.dart';
 import 'package:chat_app/view/search.dart';
@@ -18,9 +17,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   DatabaseMethods databaseMethods = DatabaseMethods();
   Stream? chatRoomStream;
   getUserInfo() async {
-    Constant.myName =
+    StringConstant.myName =
         await HelperFunctions.getUserNameSharedPreferences() ?? '';
-    await databaseMethods.getChatRooms(Constant.myName).then((value) {
+    await databaseMethods.getChatRooms(StringConstant.myName).then((value) {
       setState(() {
         chatRoomStream = value;
       });
@@ -33,33 +32,58 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ConversationScreen(chatRoomId: chatRoomId),
+              builder: (context) => ConversationScreen(
+                  chatRoomId: chatRoomId, userName: userName),
             ));
       },
-      child: Container(
-        color: Colors.black26,
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Row(
-          children: [
-            Container(
-              height: 40,
-              width: 40,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                  color: Colors.blue, borderRadius: BorderRadius.circular(40)),
-              child: Text(
-                '${userName.substring(0, 1).toUpperCase()}',
-                style: simpleTextFieldStyle(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 15),
+        child: Container(
+          decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(20)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    height: 40,
+                    width: 40,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor,
+                        borderRadius: BorderRadius.circular(40)),
+                    child: Text(
+                      userName.substring(0, 1).toUpperCase(),
+                      style: simpleTextFieldStyle(),
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Text(
+                    userName,
+                    style: simpleTextFieldStyle(
+                        color: Colors.black, boldEnabled: true),
+                  ),
+                ],
               ),
-            ),
-            SizedBox(
-              width: 8,
-            ),
-            Text(
-              userName,
-              style: simpleTextFieldStyle(),
-            ),
-          ],
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(50),
+                  color: Theme.of(context).primaryColor,
+                ),
+                child: const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.white,
+                  size: 14,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -77,12 +101,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                         snapshot.data.docs[index]
                             .data()['chatRoomId']
                             .toString()
-                            .replaceAll(Constant.myName, '')
+                            .replaceAll(StringConstant.myName, '')
                             .replaceAll('_', ''),
                         snapshot.data.docs[index].data()['chatRoomId']);
                   },
                 )
-              : Container();
+              : const Center(child: CircularProgressIndicator());
         });
   }
 
@@ -102,10 +126,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => SearchScreen(),
+                builder: (context) => const SearchScreen(),
               ));
         },
-        child: Icon(Icons.search),
+        child: const Icon(Icons.chat),
       ),
     );
   }

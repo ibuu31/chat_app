@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:chat_app/helper/constant.dart';
 import 'package:chat_app/services/database.dart';
 import 'package:chat_app/view/conversation_screen.dart';
@@ -27,10 +29,10 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   createChatRoomForConversation(String username) {
-    print(Constant.myName);
-    if (username != Constant.myName) {
-      String chatRoomId = getChatRoomId(username, Constant.myName);
-      List<String> users = [username, Constant.myName];
+    log(StringConstant.myName);
+    if (username != StringConstant.myName) {
+      String chatRoomId = getChatRoomId(username, StringConstant.myName);
+      List<String> users = [username, StringConstant.myName];
       Map<String, dynamic> chatRoomMap = {
         "users": users,
         "chatRoomId": chatRoomId
@@ -42,44 +44,49 @@ class _SearchScreenState extends State<SearchScreen> {
           MaterialPageRoute(
               builder: (context) => ConversationScreen(
                     chatRoomId: chatRoomId,
+                    userName: username,
                   )));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("You can't have conversation with self."),
+      ));
     }
   }
 
   Widget searchTile({username, userEmail}) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                username,
-                style: simpleTextFieldStyle(),
-              ),
-              Text(
-                userEmail,
-                style: simpleTextFieldStyle(),
-              ),
-            ],
-          ),
-          Spacer(),
-          GestureDetector(
-            onTap: () {
-              createChatRoomForConversation(username);
-            },
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              decoration: BoxDecoration(
-                  color: Colors.blue, borderRadius: BorderRadius.circular(30)),
-              child: Text(
-                'Message',
-                style: simpleTextFieldStyle(),
-              ),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(20)),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Row(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  username,
+                  style: simpleTextFieldStyle(color: Colors.black),
+                ),
+                Text(
+                  userEmail,
+                  style: simpleTextFieldStyle(color: Colors.black),
+                ),
+              ],
             ),
-          ),
-        ],
+            const Spacer(),
+            ElevatedButton(
+                onPressed: () {
+                  createChatRoomForConversation(username);
+                },
+                style: ButtonStyle(
+                    shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25)))),
+                child: const Text('Message')),
+          ],
+        ),
       ),
     );
   }
@@ -100,56 +107,59 @@ class _SearchScreenState extends State<SearchScreen> {
       body: Container(
         child: Column(
           children: [
-            Container(
-              color: Color(0x54FFFFFF),
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Row(
-                children: [
-                  Expanded(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: Theme.of(context).primaryColor.withOpacity(0.3),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                        child: Padding(
+                      padding: const EdgeInsets.all(8.0),
                       child: TextField(
-                    controller: searchController,
-                    decoration: textFieldInputDecoration('search username...'),
-                  )),
-                  GestureDetector(
-                    onTap: () {
-                      databaseMethods
-                          .getUserByUsername(searchController.text)
-                          .then((value) {
-                        if (value.docs.isNotEmpty) {
-                          print('object is not empty');
-                        } else {
-                          print('object is empty');
-                        }
-                        for (DocumentSnapshot doc in value.docs) {
-                          listLength = value.docs.length;
-                          print('$listLength printed');
-                          username =
-                              (doc.data() as Map<String, dynamic>)['username'];
-                          userEmail =
-                              (doc.data() as Map<String, dynamic>)['email'];
-                          print('Document ID: ${doc.id}');
-                          print(
-                              'Document Data: ${(doc.data() as Map<String, dynamic>)['username']}');
-                        }
-                        setState(() {});
-                      });
-                    },
-                    child: Container(
-                      padding: EdgeInsets.all(12),
-                      height: 40,
-                      width: 40,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(40),
-                          gradient: LinearGradient(colors: [
-                            Color(0x36FFFFFF),
-                            Color(0x0FFFFFFF),
-                          ])),
-                      child: Image.asset(
-                        'assets/images/search_white.png',
+                        controller: searchController,
+                        style: simpleTextFieldStyle(),
+                        decoration: textFieldInputDecoration(
+                            'search username...',
+                            searchField: true),
                       ),
-                    ),
-                  )
-                ],
+                    )),
+                    Container(
+                        decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor,
+                            borderRadius: BorderRadius.circular(30)),
+                        child: IconButton(
+                            onPressed: () {
+                              databaseMethods
+                                  .getUserByUsername(searchController.text)
+                                  .then((value) {
+                                if (value.docs.isNotEmpty) {
+                                  log('object is not empty');
+                                } else {
+                                  log('object is empty');
+                                }
+                                for (DocumentSnapshot doc in value.docs) {
+                                  listLength = value.docs.length;
+                                  log('$listLength printed');
+                                  username = (doc.data()
+                                      as Map<String, dynamic>)['username'];
+                                  userEmail = (doc.data()
+                                      as Map<String, dynamic>)['email'];
+                                  log('Document ID: ${doc.id}');
+                                  log('Document Data: ${(doc.data() as Map<String, dynamic>)['username']}');
+                                }
+                                setState(() {});
+                              });
+                            },
+                            color: Colors.white,
+                            icon: const Icon(Icons.search))),
+                  ],
+                ),
               ),
             ),
             Expanded(child: searchList()),

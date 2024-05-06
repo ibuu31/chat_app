@@ -33,6 +33,9 @@ class _SignInScreenState extends State<SignInScreen> {
               emailController.text, passwordController.text)
           .then((value) async {
         if (value != null) {
+          setState(() {
+            isLoading = false;
+          });
           QuerySnapshot querySnapshot =
               await databaseMethods.getUserByUserEmail(emailController.text);
           HelperFunctions.saveUserLoggedSharedPreferences(true);
@@ -46,7 +49,7 @@ class _SignInScreenState extends State<SignInScreen> {
           Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => ChatRoomScreen(),
+                builder: (context) => const ChatRoomScreen(),
               ));
         }
       });
@@ -61,7 +64,7 @@ class _SignInScreenState extends State<SignInScreen> {
         key: _formKey,
         child: Container(
           alignment: Alignment.bottomCenter,
-          padding: EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -75,7 +78,10 @@ class _SignInScreenState extends State<SignInScreen> {
                   },
                   controller: emailController,
                   style: simpleTextFieldStyle(),
-                  decoration: textFieldInputDecoration('email')),
+                  decoration: textFieldInputDecoration('email', isLogin: true)),
+              const SizedBox(
+                height: 15,
+              ),
               TextFormField(
                   validator: (val) {
                     return val!.length < 6
@@ -85,61 +91,43 @@ class _SignInScreenState extends State<SignInScreen> {
                   controller: passwordController,
                   style: simpleTextFieldStyle(),
                   obscureText: true,
-                  decoration: textFieldInputDecoration('password')),
-              SizedBox(height: 8),
+                  decoration:
+                      textFieldInputDecoration('password', isLogin: true)),
+              const SizedBox(height: 8),
               Container(
                 alignment: Alignment.centerRight,
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
+                child: TextButton(
+                  onPressed: () {
+                    authMethods.resetPass('email');
+                  },
                   child: Text(
                     'Forgot Password?',
-                    style: simpleTextFieldStyle(),
+                    style: simpleTextFieldStyle(
+                      color: Colors.blue.shade800,
+                    ),
                   ),
                 ),
               ),
-              SizedBox(height: 8),
-              GestureDetector(
-                onTap: () {
-                  signMeIn();
-                },
-                child: Container(
-                  alignment: Alignment.center,
-                  width: MediaQuery.of(context).size.width,
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
-                      gradient: LinearGradient(colors: [
-                        Color(0xff007EF4),
-                        Color(0xff2A75BC),
-                      ])),
-                  child: Text(
-                    'Sign in',
-                    style: simpleTextFieldStyle(),
-                  ),
-                ),
-              ),
-              SizedBox(height: 16),
-              Container(
-                alignment: Alignment.center,
-                width: MediaQuery.of(context).size.width,
-                padding: EdgeInsets.symmetric(vertical: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Text(
-                  'Sign in with Google',
-                  style: TextStyle(color: Colors.black, fontSize: 16),
-                ),
-              ),
-              SizedBox(height: 16),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                  onPressed: () {
+                    signMeIn();
+                  },
+                  style: ButtonStyle(
+                      fixedSize: MaterialStateProperty.all(
+                          Size(MediaQuery.of(context).size.width / 2, 45)),
+                      shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)))),
+                  child: isLoading == true
+                      ? const CircularProgressIndicator()
+                      : const Text('Login')),
+              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     'Dont have account? ',
-                    style: simpleTextFieldStyle(),
+                    style: simpleTextFieldStyle(color: Colors.blue.shade800),
                   ),
                   TextButton(
                     onPressed: () {
@@ -147,12 +135,13 @@ class _SignInScreenState extends State<SignInScreen> {
                     },
                     child: Text(
                       'Register now',
-                      style: simpleTextFieldStyle(underLine: true),
+                      style: simpleTextFieldStyle(
+                          underLine: true, color: Colors.blue.shade800),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 50),
+              const SizedBox(height: 50),
             ],
           ),
         ),
